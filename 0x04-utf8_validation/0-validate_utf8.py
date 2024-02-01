@@ -1,44 +1,28 @@
-#!/usr/bin/python3
+#!user/bin/env python3
+
+""" A script to determines if a given data 
+    set represents a valid UTF-8 encoding.
 """
-0-validate_utf8 module
-"""
 
 
-def validUTF8(data) -> bool:
-    """Determines if a given data set represents a valid UTF-8 encoding"""
+def validUTF8(data):
+    """ٌ Return  True if data is a valid UTF-8 encoding, else return False
 
-    def byte_sequence_count(byte):
-        """Returns the number of bytes in a UTF-8 sequence"""
-        binary_representation = bin(byte)[2:].rjust(8, "0")
-        if binary_representation.startswith("0"):
-            return 1
-        elif binary_representation.startswith("110"):
-            return 2
-        elif binary_representation.startswith("1110"):
-            return 3
-        elif binary_representation.startswith("11110"):
-            return 4
-        else:
-            return -1
-
-    i = 0
-
-    while i < len(data):
-        sequence_count = byte_sequence_count(data[i])
-        if sequence_count == -1:
-            return False
-
-        i += 1
-        if sequence_count == 1:
-            continue
-
-        if i + sequence_count - 1 > len(data):
-            return False
-
-        for j in range(sequence_count - 1):
-            if not (data[i + j] >> 6 == 0b10):
+    Args:
+        data (_type_):  list of integers
+    """
+    count = 0
+    for byte in data:
+        if count == 0:
+            mask = 0x80
+            while (byte & mask) != 0:
+                count += 1
+                mask >>= 1
+            if count == 0:
+                continue
+            if count > 4 or count == 1:
                 return False
-
-        i += sequence_count - 1
-
-    return True
+        else:
+            if (byte & 0xC0) != 0x80:
+                return False
+    return count == 0
