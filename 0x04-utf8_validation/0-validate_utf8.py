@@ -36,7 +36,7 @@ def validUTF8(data) -> bool:
             return False
 
         for j in range(sequence_count - 1):
-            if not (data[i + j] & 0b11000000 == 0b10000000):
+            if not (data[i + j] >> 6 == 0b10):
                 return False
 
         i += sequence_count - 1
