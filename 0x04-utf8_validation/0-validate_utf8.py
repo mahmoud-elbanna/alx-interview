@@ -1,47 +1,44 @@
 #!/usr/bin/python3
 """
-UTF-8 Validation
+0-validate_utf8 module
 """
 
 
-def validUTF8(data):
-    """
-    Check if the given list of integers represents a valid UTF-8 encoding.
+def validUTF8(data) -> bool:
+    """Determines if a given data set represents a valid UTF-8 encoding"""
 
-    Args:
-        data (list[int]): A list of integers representing UTF-8 encoded data.
-
-    Returns:
-        bool: True if the data is a valid UTF-8 encoding, False otherwise.
-    """
-
-    # Number of expected continuation bytes for the current UTF-8 character
-    remaining_bytes = 0
-
-    # Iterate over each integer in the data
-    for num in data:
-        if remaining_bytes == 0:
-            # If no continuation bytes are expected, check the byte's pattern
-
-            if num >> 5 == 0b110:
-                # 2-byte character (pattern: 110xxxxx)
-                remaining_bytes = 1
-            elif num >> 4 == 0b1110:
-                # 3-byte character (pattern: 1110xxxx)
-                remaining_bytes = 2
-            elif num >> 3 == 0b11110:
-                # 4-byte character (pattern: 11110xxx)
-                remaining_bytes = 3
-            elif num >> 7 == 0b1:
-                # Invalid start of a continuation byte (pattern: 10xxxxxx)
-                return False
+    def byte_sequence_count(byte):
+        """Returns the number of bytes in a UTF-8 sequence"""
+        binary_representation = bin(byte)[2:].rjust(8, "0")
+        if binary_representation.startswith("0"):
+            return 1
+        elif binary_representation.startswith("110"):
+            return 2
+        elif binary_representation.startswith("1110"):
+            return 3
+        elif binary_representation.startswith("11110"):
+            return 4
         else:
-            # Continuation byte expected, check if the byte matches the pattern (10xxxxxx)
-            if num >> 6 != 0b10:
+            return -1
+
+    i = 0
+
+    while i < len(data):
+        sequence_count = byte_sequence_count(data[i])
+        if sequence_count == -1:
+            return False
+
+        i += 1
+        if sequence_count == 1:
+            continue
+
+        if i + sequence_count - 1 > len(data):
+            return False
+
+        for j in range(sequence_count - 1):
+            if not (data[i + j] & 0b11000000 == 0b10000000):
                 return False
 
-            # Decrement the count of remaining continuation bytes
-            remaining_bytes -= 1
+        i += sequence_count - 1
 
-    # If all bytes have been processed and there are no remaining bytes, the encoding is valid
-    return remaining_bytes == 0
+    return True
